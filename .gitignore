@@ -1,0 +1,11 @@
+# Misc
+.DS_Store
+*.pem
+tmp
+
+# Xcode
+**/xcuserdata
+
+# Fastlane
+fastlane/test_output
+fastlane/report.xml

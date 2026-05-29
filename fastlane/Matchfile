@@ -1,0 +1,6 @@
+git_url ENV["MATCH_GIT_URL"]
+storage_mode "git"
+type "appstore"
+app_identifier ["com.1conundrum.CountThat"]
+username ENV["APPLE_ID"]
+readonly true
