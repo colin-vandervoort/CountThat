@@ -31,8 +31,14 @@ platform :ios do
   desc "Build and upload to TestFlight"
   lane :beta do
     setup_asc_api_key
+    setup_ci_keychain
 
-    match(type: "appstore", readonly: true)
+    match(
+      type: "appstore",
+      readonly: true,
+      keychain_name: ENV["CI_KEYCHAIN_NAME"],
+      keychain_password: ENV["CI_KEYCHAIN_PASSWORD"]
+    )
 
     increment_build_number(
       build_number: latest_testflight_build_number + 1
@@ -56,13 +62,21 @@ platform :ios do
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )
+  ensure
+    delete_keychain(name: ENV["CI_KEYCHAIN_NAME"]) if ENV["CI_KEYCHAIN_NAME"]
   end
 
   desc "Submit to App Store"
   lane :release do
     setup_asc_api_key
+    setup_ci_keychain
 
-    match(type: "appstore", readonly: true)
+    match(
+      type: "appstore",
+      readonly: true,
+      keychain_name: ENV["CI_KEYCHAIN_NAME"],
+      keychain_password: ENV["CI_KEYCHAIN_PASSWORD"]
+    )
 
     update_code_signing_settings(
       use_automatic_signing: false,
@@ -84,6 +98,8 @@ platform :ios do
       automatic_release: false,
       force: true
     )
+  ensure
+    delete_keychain(name: ENV["CI_KEYCHAIN_NAME"]) if ENV["CI_KEYCHAIN_NAME"]
   end
 
   private_lane :setup_asc_api_key do
@@ -93,6 +109,23 @@ platform :ios do
       key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
       is_key_content_base64: false,
       in_house: false
+    )
+  end
+
+  private_lane :setup_ci_keychain do
+    keychain_name = "ci_signing_#{SecureRandom.hex(4)}"
+    keychain_password = SecureRandom.hex(32)
+
+    ENV["CI_KEYCHAIN_NAME"] = keychain_name
+    ENV["CI_KEYCHAIN_PASSWORD"] = keychain_password
+
+    create_keychain(
+      name: keychain_name,
+      password: keychain_password,
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false
     )
   end
 end
