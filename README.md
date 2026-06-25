@@ -2,6 +2,58 @@
 
 Released as "It Counts For You" on the Apple App Store.
 
+## App Store Compliance
+
+### Encryption (US Export Compliance)
+
+App Store Connect requires a declaration of what encryption algorithms the app uses, under US Export Administration Regulations (EAR). Every submission prompts for one of four options:
+
+| Option | Meaning                                                                         |
+| ------ | ------------------------------------------------------------------------------- |
+| A      | Proprietary or non-standard encryption (not approved by IEEE, IETF, ITU, etc.)  |
+| B      | Standard encryption algorithms, implemented directly or via third-party library |
+| C      | Both A and B                                                                    |
+| D      | None of the above                                                               |
+
+**CountThat uses option D** — it transmits no data and implements no encryption of its own. All persistence is local.
+
+> **Note on future CloudKit + SwiftData sync:** If automatic CloudKit integration is enabled via SwiftData, the encryption classification does **not change** — it remains option D / `ITSAppUsesNonExemptEncryption = NO`. See the [SwiftData + CloudKit section](#swiftdata--cloudkit-automatic-sync) below for details.
+
+**How to determine the right option for other apps:**
+
+- **Apps using only Apple frameworks** (URLSession, CloudKit, SwiftData, CoreData with CloudKit sync, Sign in with Apple) — Apple's frameworks use TLS and AES internally, but Apple holds the export licenses for those. An app that only calls Apple APIs and adds no encryption of its own qualifies as **exempt**. Select D, or set `ITSAppUsesNonExemptEncryption = NO` in Info.plist to skip the prompt entirely on future submissions.
+
+- **Apps using standard encryption directly** (CryptoKit for custom protocols, third-party libraries like OpenSSL, libsodium, or any TLS stack outside of Apple's) — select B. May require filing an Annual Self Classification Report with the US Bureau of Industry and Security (BIS).
+
+- **Apps using custom or proprietary encryption** — select A or C. Likely requires an Encryption Registration Number (ERN) from BIS before submission.
+
+#### SwiftData + CloudKit Automatic Sync
+
+SwiftData can be configured to sync automatically with CloudKit by using a `ModelConfiguration` with a CloudKit container identifier, or by using `NSPersistentCloudKitContainer` under the hood. When enabled, the framework transparently syncs model data across a user's devices via iCloud.
+
+From an export compliance perspective, this is fully **exempt** — the same as not having sync at all:
+
+- **Transport encryption:** CloudKit uses TLS 1.2+ for all data in transit. Apple holds the EAR export license for this, not the app developer. ([Apple Platform Security Guide — iCloud security overview](https://support.apple.com/guide/security/icloud-data-security-overview-secdaef4f1e7/web))
+- **At-rest encryption:** CloudKit encrypts data at rest using AES-128 or AES-256, again under Apple's export license. Some CloudKit fields use end-to-end encryption (only decryptable on the user's trusted devices); others use standard encryption (accessible to Apple for service purposes). The developer does not implement or configure any of this directly.
+- **Developer responsibility:** Zero. The app calls `ModelContainer(for:configurations:)` or similar SwiftData APIs — no cryptographic code is written or bundled by the app.
+
+Because the app adds no encryption beyond what Apple's frameworks provide, it still qualifies as **exempt** under EAR. `ITSAppUsesNonExemptEncryption = NO` remains correct after enabling CloudKit sync.
+
+**Official Apple documentation:**
+
+- [Complying with Encryption Export Regulations](https://developer.apple.com/documentation/security/complying-with-encryption-export-regulations) — Apple's canonical guidance; confirms apps using only Apple-provided encryption are exempt
+- [iCloud Data Security Overview](https://support.apple.com/guide/security/icloud-data-security-overview-secdaef4f1e7/web) — details what CloudKit encrypts, how, and who holds the keys
+- [Adopting SwiftData for a Core Data app](https://developer.apple.com/documentation/coredata/adopting-swiftdata-for-a-core-data-app) — migration path from CoreData + NSPersistentCloudKitContainer to SwiftData
+
+**Automating the declaration** — add to Info.plist to avoid the prompt on every submission:
+
+```xml
+<key>ITSAppUsesNonExemptEncryption</key>
+<false/>
+```
+
+Use `<true/>` if the app uses non-exempt encryption — App Store Connect will then require an ERN or compliance documentation.
+
 ## Testing via Fastlane
 
 Fastlane can be used to run tests. Simulators for all listed devices must be installed first. For example, in the following lane definition, the `run_tests` action lists iPhone 16 as the sole test target.
