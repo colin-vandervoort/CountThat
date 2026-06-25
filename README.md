@@ -32,6 +32,39 @@ See the [Fastlane README](./fastlane/README.md) for more detail.
 
 GitHub Actions runs CI (lint + test) on PRs and CD (TestFlight on merge to `main`, App Store on `v*.*.*` tags) via Fastlane.
 
+### TestFlight Release Flow
+
+```mermaid
+sequenceDiagram
+    participant GH as GitHub Actions
+    participant Certs as Certs Repo
+    participant Keychain as Runner Keychain
+    participant ASC as App Store Connect
+    participant TF as TestFlight
+
+    GH->>GH: Push to main triggers beta lane
+    GH->>GH: Load SSH deploy key from secret into ssh-agent
+
+    GH->>Certs: Clone via SSH (deploy key auth)
+    Certs-->>GH: Encrypted certificate + provisioning profile
+
+    GH->>Keychain: Decrypt with MATCH_PASSWORD, install cert + profile
+    Keychain-->>GH: Signing identity ready
+
+    GH->>ASC: Authenticate (App Store Connect API key)
+    ASC-->>GH: Auth confirmed
+
+    GH->>ASC: Fetch latest TestFlight build number
+    ASC-->>GH: Build number N
+
+    GH->>GH: Increment build number to N+1
+    GH->>GH: xcodebuild archive → export .ipa (signed with installed profile)
+
+    GH->>ASC: Upload .ipa
+    ASC-->>GH: Upload accepted
+    ASC->>TF: Process and publish build
+```
+
 ### Repository Security Settings
 
 #### Certificates repo
