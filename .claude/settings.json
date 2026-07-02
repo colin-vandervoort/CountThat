@@ -16,6 +16,8 @@
       "Bash(bd sync:*)",
       "Bash(bd show:*)",
       "Bash(bd update:*)",
+      "Bash(bundle exec fastlane run verify_app_icon:*)",
+      "Bash(bundle exec fastlane run verify_info_plist:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git diff:*)",
