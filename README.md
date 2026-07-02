@@ -54,6 +54,42 @@ Because the app adds no encryption beyond what Apple's frameworks provide, it st
 
 Use `<true/>` if the app uses non-exempt encryption — App Store Connect will then require an ERN or compliance documentation.
 
+### App Icon (No Transparency)
+
+App Store Connect rejects the app icon (`CountThat/Assets.xcassets/AppIcon.appiconset/logo.png`) if it has an alpha channel — the icon must be fully opaque. This has broken TestFlight uploads before; the `verify_app_icon` Fastlane action (see [fastlane/actions/verify_app_icon.rb](./fastlane/actions/verify_app_icon.rb)) now checks for this before every `beta`/`release` run, but if it fails, flatten the icon with one of the following:
+
+**`sips`** (built into macOS, no install needed — confirmed working on this machine where neither ImageMagick nor Pillow were installed). Round-tripping through JPEG strips the alpha channel, since JPEG has none:
+
+```bash
+sips -s format jpeg logo.png --out /tmp/logo.jpg
+sips -s format png /tmp/logo.jpg --out logo.png
+```
+
+`sips` composites transparent pixels onto **black** during this conversion — fine if the icon's transparent regions are meant to be dark/edge antialiasing, but check the result visually. If you need a specific fill color (e.g. white), use one of the alternatives below instead.
+
+**ImageMagick** (`brew install imagemagick`; also preinstalled on GitHub's macOS runners) — lets you pick the fill color explicitly:
+
+```bash
+convert logo.png -background white -alpha remove -alpha off logo.png
+```
+
+**`mini_magick` gem** (already a transitive Fastlane dependency — same operation from Ruby, useful if scripting the fix):
+
+```ruby
+require "mini_magick"
+img = MiniMagick::Image.open("logo.png")
+img.combine_options { |c| c.background("white"); c.alpha("remove"); c.alpha("off") }
+img.write("logo.png")
+```
+
+Verify the result has no alpha channel, regardless of which method you used:
+
+```bash
+sips -g hasAlpha logo.png   # should print: hasAlpha: no
+```
+
+Apply the same fix to `CountThat/Assets.xcassets/AppIcon.appiconset/logo.png` and, if you want them to stay in sync, the top-level source `logo.png`/`logo.svg`.
+
 ## Testing via Fastlane
 
 Fastlane can be used to run tests. Simulators for all listed devices must be installed first. For example, in the following lane definition, the `run_tests` action lists iPhone 16 as the sole test target.
