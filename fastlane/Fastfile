@@ -106,7 +106,8 @@ platform :ios do
       submit_for_review: true,
       automatic_release: false,
       force: true,
-      overwrite_screenshots: true
+      skip_metadata: true,
+      skip_screenshots: true
     )
   ensure
     delete_keychain(name: ENV["CI_KEYCHAIN_NAME"]) if ENV["CI_KEYCHAIN_NAME"]
