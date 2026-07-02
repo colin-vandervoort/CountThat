@@ -1,4 +1,5 @@
-## fastlane documentation
+fastlane documentation
+----
 
 # Installation
 
@@ -29,6 +30,14 @@ Run SwiftLint
 ```
 
 Run unit and UI tests
+
+### ios match_init
+
+```sh
+[bundle exec] fastlane ios match_init
+```
+
+One-time local setup: generate certs and push to certs repo using ASC API key
 
 ### ios beta
 

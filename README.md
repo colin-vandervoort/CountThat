@@ -1,5 +1,7 @@
 # CountThat: A simple app for counting things
 
+<img src="CountThat/Assets.xcassets/AppIcon.appiconset/logo.png" width="128" height="128" alt="CountThat app icon" />
+
 Released as "It Counts For You" on the Apple App Store.
 
 ## App Store Compliance

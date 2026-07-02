@@ -27,15 +27,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="1.6255659"
-     inkscape:cx="338.03613"
-     inkscape:cy="379.86771"
+     inkscape:zoom="1.0489856"
+     inkscape:cx="231.65237"
+     inkscape:cy="479.98752"
      inkscape:window-width="1920"
      inkscape:window-height="1142"
      inkscape:window-x="0"
      inkscape:window-y="30"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer2" />
+     inkscape:current-layer="layer1" />
   <defs
      id="defs1">
     <pattern
@@ -43,9 +43,9 @@
        xlink:href="#pattern6"
        preserveAspectRatio="xMidYMid"
        id="pattern47"
-       patternTransform="matrix(0.874,0,0,0.874,165,440)"
-       x="-7.7"
-       y="20.75" />
+       patternTransform="matrix(1.75,0,0,1.75,165,440)"
+       x="-3.65"
+       y="5.69999981" />
     <pattern
        patternUnits="userSpaceOnUse"
        width="60"
@@ -86,10 +86,10 @@
     <inkscape:path-effect
        effect="fillet_chamfer"
        id="path-effect2"
-       is_visible="false"
+       is_visible="true"
        lpeversion="1"
-       nodesatellites_param="C,0,0,1,0,5.2916667,0,1 @ C,0,1,1,0,0,0,1 @ C,0,0,1,0,5.2916667,0,1 @ C,0,0,1,0,5.2916667,0,1 @ C,0,1,1,0,0,0,1 @ C,0,0,1,0,5.2916667,0,1 @ C,0,0,1,0,5.2916667,0,1 @ C,0,0,1,0,0,0,1 @ C,0,0,1,0,5.2916667,0,1 @ C,0,0,1,0,5.2916667,0,1 @ C,0,1,1,0,0,0,1 @ C,0,0,1,0,5.2916667,0,1"
-       radius="0"
+       nodesatellites_param="C,0,1,1,0,2.9104167,0,1 @ C,0,0,1,0,0,0,1 @ C,0,1,1,0,2.9104167,0,1 @ C,0,1,1,0,2.9104167,0,1 @ C,0,0,1,0,0,0,1 @ C,0,1,1,0,2.9104167,0,1 @ C,0,1,1,0,2.9104167,0,1 @ C,0,0,1,0,0,0,1 @ C,0,1,1,0,2.9104167,0,1 @ C,0,1,1,0,2.9104167,0,1 @ C,0,0,1,0,0,0,1 @ C,0,1,1,0,2.9104167,0,1"
+       radius="11"
        unit="px"
        method="auto"
        mode="F"
@@ -129,7 +129,7 @@
     <path
        id="rect1"
        style="fill:#69c4e6;fill-opacity:1;stroke:#000000;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
-       d="M 94.59991,69.844832 V 105.03235 H 59.412394 v 25.46201 H 94.59991 v 35.18752 h 25.46201 v -35.18752 h 35.18752 V 105.03235 H 120.06192 V 69.844832 Z"
+       d="M 94.59991,72.755249 V 105.03235 H 62.322811 l -2.910417,2.91042 0,19.64117 2.910417,2.91042 H 94.59991 v 32.2771 l 2.910417,2.91042 H 117.1515 l 2.91042,-2.91042 v -32.2771 h 32.2771 l 2.91042,-2.91042 v -19.64117 l -2.91042,-2.91042 -32.2771,0 V 72.755249 L 117.1515,69.844832 H 97.510327 Z"
        inkscape:path-effect="#path-effect2"
        inkscape:original-d="M 94.59991,69.844832 V 105.03235 H 59.412394 v 25.46201 H 94.59991 v 35.18752 h 25.46201 v -35.18752 h 35.18752 V 105.03235 H 120.06192 V 69.844832 Z"
        inkscape:label="plus"
