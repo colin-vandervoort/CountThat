@@ -1,0 +1,5 @@
+It Counts For You is a simple app for counting things. Create as many
+counters as you need, increment or decrement with a tap, and pick up
+right where you left off — everything is saved on your device.
+
+No accounts, no ads, no tracking. Just counters.

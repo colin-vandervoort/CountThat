@@ -74,6 +74,9 @@ platform :ios do
     verify_app_icon
     verify_info_plist
 
+    version = ENV["GITHUB_REF_NAME"]&.delete_prefix("v")
+    increment_version_number(version_number: version) if version
+
     setup_asc_api_key
     setup_ci_keychain
 
@@ -102,7 +105,8 @@ platform :ios do
     upload_to_app_store(
       submit_for_review: true,
       automatic_release: false,
-      force: true
+      force: true,
+      overwrite_screenshots: true
     )
   ensure
     delete_keychain(name: ENV["CI_KEYCHAIN_NAME"]) if ENV["CI_KEYCHAIN_NAME"]
