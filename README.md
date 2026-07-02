@@ -56,7 +56,17 @@ Use `<true/>` if the app uses non-exempt encryption — App Store Connect will t
 
 ### App Icon (No Transparency)
 
-App Store Connect rejects the app icon (`CountThat/Assets.xcassets/AppIcon.appiconset/logo.png`) if it has an alpha channel — the icon must be fully opaque. This has broken TestFlight uploads before; the `verify_app_icon` Fastlane action (see [fastlane/actions/verify_app_icon.rb](./fastlane/actions/verify_app_icon.rb)) now checks for this before every `beta`/`release` run, but if it fails, flatten the icon with one of the following:
+App Store Connect rejects the app icon (`CountThat/Assets.xcassets/AppIcon.appiconset/logo.png`) if it has an alpha channel — the icon must be fully opaque. This has broken TestFlight uploads before; the `verify_app_icon` Fastlane action (see [fastlane/actions/verify_app_icon.rb](./fastlane/actions/verify_app_icon.rb)) now checks for this before every `beta`/`release` run.
+
+The icon's source is `logo.svg`, edited in Inkscape. Inkscape's PNG exporter **always** writes an alpha channel — even with a fully opaque background and `--export-background-opacity=1.0` explicitly set — so no SVG-only setting makes a plain File > Export come out alpha-free. Use the wrapper script instead of exporting manually:
+
+```bash
+./scripts/export_icon.sh
+```
+
+This runs the Inkscape export at 1024x1024 and immediately strips the alpha channel, writing straight to `CountThat/Assets.xcassets/AppIcon.appiconset/logo.png`. Confirmed working end-to-end on this machine.
+
+If you need to flatten an already-exported PNG by hand instead, any of the following work:
 
 **`sips`** (built into macOS, no install needed — confirmed working on this machine where neither ImageMagick nor Pillow were installed). Round-tripping through JPEG strips the alpha channel, since JPEG has none:
 
