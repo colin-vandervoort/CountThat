@@ -22,6 +22,17 @@ platform :ios do
     )
   end
 
+  desc "Capture App Store screenshots (run locally before submission)"
+  lane :screenshots do
+    capture_screenshots(only_testing: ["CountThatUITests/CountThatSnapshotTests"])
+
+    screenshots_dir = File.join(File.dirname(__FILE__), "screenshots")
+    Dir.glob(File.join(screenshots_dir, "**", "*.png")).each do |path|
+      renamed = path.gsub(" ", "_")
+      File.rename(path, renamed) if renamed != path
+    end
+  end
+
   desc "One-time local setup: generate certs and push to certs repo using ASC API key"
   lane :match_init do
     setup_asc_api_key

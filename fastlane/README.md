@@ -31,6 +31,14 @@ Run SwiftLint
 
 Run unit and UI tests
 
+### ios screenshots
+
+```sh
+[bundle exec] fastlane ios screenshots
+```
+
+Capture App Store screenshots (run locally before submission)
+
 ### ios match_init
 
 ```sh

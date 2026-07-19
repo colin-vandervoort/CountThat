@@ -15,34 +15,6 @@ final class CountThatUITests: XCTestCase {
     app = nil
   }
 
-  // MARK: - Helpers
-
-  @discardableResult
-  func createCounter(name: String, desc: String = "", countSteps: Int = 0) -> XCUIApplication {
-    app.buttons["Add Counter"].tap()
-    XCTAssertTrue(app.navigationBars["New Counter"].waitForExistence(timeout: 3))
-
-    let nameField = app.textFields.matching(identifier: "counter-name-field").firstMatch
-    nameField.tap()
-    nameField.typeText(name)
-
-    if !desc.isEmpty {
-      let descField = app.textFields.matching(identifier: "counter-desc-field").firstMatch
-      descField.tap()
-      descField.typeText(desc)
-    }
-
-    if countSteps > 0 {
-      let stepper = app.steppers.firstMatch
-      let increment = stepper.buttons["Increment"]
-      for _ in 0..<countSteps { increment.tap() }
-    }
-
-    app.buttons["Save"].tap()
-    XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 3))
-    return app
-  }
-
   // MARK: - Tests
 
   @MainActor
@@ -52,7 +24,7 @@ final class CountThatUITests: XCTestCase {
 
   @MainActor
   func testCreateCounterAppearsInList() {
-    createCounter(name: "Push-ups", desc: "Daily reps")
+    app.createCounter(name: "Push-ups", desc: "Daily reps")
 
     XCTAssertTrue(app.staticTexts["Push-ups"].exists)
     XCTAssertTrue(app.staticTexts["Daily reps"].exists)
@@ -63,7 +35,7 @@ final class CountThatUITests: XCTestCase {
 
   @MainActor
   func testCreateCounterAndIncrementDecrement() {
-    createCounter(name: "Steps")
+    app.createCounter(name: "Steps")
 
     let increment = app.buttons["Increment Steps"]
     let decrement = app.buttons["Decrement Steps"]
@@ -80,7 +52,7 @@ final class CountThatUITests: XCTestCase {
 
   @MainActor
   func testCreateCounterWithInitialCountViaForm() {
-    createCounter(name: "Laps", countSteps: 5)
+    app.createCounter(name: "Laps", count: 5)
 
     let count = app.staticTexts.matching(identifier: "count-Laps").firstMatch
     XCTAssertEqual(count.label, "5")
@@ -119,7 +91,7 @@ final class CountThatUITests: XCTestCase {
 
   @MainActor
   func testEditExistingCounter() {
-    createCounter(name: "Original")
+    app.createCounter(name: "Original")
 
     app.buttons["Edit Original"].tap()
     XCTAssertTrue(app.navigationBars["Edit Counter"].waitForExistence(timeout: 3))
@@ -137,7 +109,7 @@ final class CountThatUITests: XCTestCase {
 
   @MainActor
   func testSwipeToDeleteCounter() {
-    createCounter(name: "Temporary")
+    app.createCounter(name: "Temporary")
 
     let row = app.staticTexts["Temporary"]
     XCTAssertTrue(row.exists)
@@ -177,5 +149,35 @@ extension XCUIElement {
     tap()
     let delete = String(repeating: XCUIKeyboardKey.delete.rawValue, count: text.count)
     typeText(delete)
+  }
+}
+
+// MARK: - XCUIApplication helpers
+
+extension XCUIApplication {
+  @discardableResult
+  func createCounter(name: String, desc: String = "", count: Int = 0) -> XCUIApplication {
+    buttons["Add Counter"].tap()
+    XCTAssertTrue(navigationBars["New Counter"].waitForExistence(timeout: 3))
+
+    let nameField = textFields.matching(identifier: "counter-name-field").firstMatch
+    nameField.tap()
+    nameField.typeText(name)
+
+    if desc.isEmpty == false {
+      let descField = textFields.matching(identifier: "counter-desc-field").firstMatch
+      descField.tap()
+      descField.typeText(desc)
+    }
+
+    if count > 0 {
+      let stepper = steppers.firstMatch
+      let increment = stepper.buttons["Increment"]
+      for _ in 0..<count { increment.tap() }
+    }
+
+    buttons["Save"].tap()
+    XCTAssertTrue(staticTexts[name].waitForExistence(timeout: 3))
+    return self
   }
 }
