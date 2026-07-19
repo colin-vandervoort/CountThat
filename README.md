@@ -239,6 +239,37 @@ Exclude In-app purchases from precheck, disable the precheck step in your build 
 
 **Fix:** CountThat has no in-app purchases, so `precheck_include_in_app_purchases: false` is set on the `upload_to_app_store` call — this excludes only that one check and leaves the rest of precheck (screenshots, description, keywords, etc.) running. If a future app in this family _does_ sell in-app purchases, that check would need to run via Apple ID login instead (`run_precheck_before_submit: false` combined with a manual precheck pass, or dropping the API key for that lane) — the hard error itself is unconditional in this fastlane version, thrown from `precheck/lib/precheck/runner.rb:37` (and mirrored in `deliver/lib/deliver/runner.rb:96`) whenever API-key auth is used and the check isn't excluded.
 
+### App Metadata Required for First Submission (Age Rating, Category, Pricing, Privacy)
+
+A brand-new app has none of the App Store Connect metadata that only lives at the *app* level (as opposed to the version-scoped fields `deliver` already manages, like description and screenshots). `submit_for_review` rejects the review submission with a wall of "missing required attribute" errors the first time, e.g.:
+
+```
+The provided entity is missing a required relationship - You must provide a value for the relationship 'primaryCategory' with this request
+The provided entity is missing a required attribute - You must provide a value for the attribute 'violenceCartoonOrFantasy' with this request
+[... ~20 more age-rating attributes ...]
+Answers to what data your app collects and how it's used are needed. - You must have published answers to your app's data usages.
+App is missing required pricing. - App is not eligible for submission until pricing has been set.
+```
+
+**Why:** these are one-time, app-level fields Apple expects to be set once and left alone — App Store Connect's web UI walks a human through them when creating a new app, but `upload_to_app_store` skips that flow entirely.
+
+**Fix:** the `release` lane now sets all of these explicitly so a from-scratch app is submittable in CI:
+
+- `primary_category: "Utilities"` and `app_rating_config_path: "fastlane/metadata/app_rating_config.json"` on `upload_to_app_store` — the JSON answers every age-rating question with "none of this content" (CountThat has no violence, gambling, mature themes, user-generated content, etc.), matching `Spaceship::ConnectAPI::AgeRatingDeclaration`'s attribute names directly (verified against `spaceship/lib/spaceship/connect_api/models/age_rating_declaration.rb` in the installed `fastlane-2.237.0` gem — unrecognized-to-legacy-ITC key mapping is a no-op for keys already in the new form).
+- `submission_information: { content_rights_contains_third_party_content: false }` — CountThat has no third-party content.
+- `price_tier: 0` — free app; `deliver` still supports the legacy price-tier endpoint for setting a free price and enabling all territories on an app with no prices yet (`deliver/lib/deliver/upload_price_tier.rb`).
+- A new `declare_no_data_collection` private lane runs before `upload_to_app_store` and publishes the App Privacy "nutrition label" via `Spaceship::ConnectAPI::AppDataUsagesPublishState` directly (there's no `deliver` option for this). CountThat collects no data (see `docs/privacy.html`), so publishing with zero `AppDataUsage` records is the correct "Data Not Collected" declaration — no per-category answers to submit.
+
+None of this is versioned per-release the way screenshots or release notes are — once App Store Connect has these values, subsequent releases won't hit these errors even without re-sending them, but sending them every time keeps the lane reproducible from a freshly created app (same rationale as the App Review Information pitfall above).
+
+### Duplicate Screenshots (Upload Retry Race)
+
+Screenshots showed up doubled in App Store Connect (each of the 6 images present twice per set) despite `overwrite_screenshots: true` deleting all existing sets before every upload.
+
+**Why:** confirmed from the CI log (run `29698286862`) — `deliver` uploaded all 6 screenshots, then polled and found them fully processed, then ran a post-upload checksum verification (`deliver/lib/deliver/upload_screenshots.rb#verify_local_screenshots_are_uploaded`) that incorrectly reported all 6 as `"is missing on App Store Connect"` — almost certainly an eventual-consistency lag between Apple marking an asset's `asset_delivery_state` as complete and that asset's checksum becoming visible for the very next API read. `retry_upload_screenshots_if_needed` treats this as a real failure and re-runs `upload_screenshots` from scratch. The in-upload dedup check (`app_screenshot_set.app_screenshots.any? { checksum match }`) is supposed to prevent exactly this, but it reads from `app_screenshot_set` objects captured before the retry, so it doesn't see the screenshots the first pass just uploaded — the retry re-uploads all 6 a second time instead of skipping them as duplicates.
+
+**Fix:** this is a race inside `deliver` itself, not something exposed as a lane option — there's no workaround flag to reach for here. Practically, it self-heals: `overwrite_screenshots: true` deletes the *entire* screenshot set (dupes included) at the start of the *next* successful release run, before re-uploading fresh, so as long as a future run completes the screenshot-upload stage cleanly, the duplicates disappear on their own. No manual App Store Connect cleanup is required unless you want the current in-progress (unreleased) version to look correct before that next run.
+
 ### Running Match Locally
 
 When running `match appstore` for the first time, Fastlane may prompt for your Apple developer account password.
