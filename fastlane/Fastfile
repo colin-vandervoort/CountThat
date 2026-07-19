@@ -123,8 +123,6 @@ platform :ios do
       clean: true
     )
 
-    declare_no_data_collection
-
     upload_to_app_store(
       submit_for_review: true,
       automatic_release: false,
@@ -147,19 +145,6 @@ platform :ios do
     )
   ensure
     delete_keychain(name: ENV["CI_KEYCHAIN_NAME"]) if ENV["CI_KEYCHAIN_NAME"]
-  end
-
-  desc "Declare that the app collects no user data (App Privacy 'nutrition label')"
-  private_lane :declare_no_data_collection do
-    app = Spaceship::ConnectAPI::App.find("com.1conundrum.CountThat")
-    publish_state = Spaceship::ConnectAPI::AppDataUsagesPublishState.get(app_id: app.id)
-
-    if publish_state.published
-      UI.message("App Privacy data usage already published - skipping")
-    else
-      publish_state.publish!
-      UI.success("Published App Privacy declaration: no data collected")
-    end
   end
 
   private_lane :setup_asc_api_key do
