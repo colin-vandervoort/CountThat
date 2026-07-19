@@ -226,6 +226,19 @@ Two conditions have to hold for that blanket redaction to actually apply, both t
 | A future lane adds `--verbose` or another flag that reformats/encodes these values | Low        | Medium | Masking relies on an exact-string match; any transform (base64, case change, JSON-escaping) before printing would defeat it — avoid adding debug/verbose flags to the `release` lane |
 | Values exposed via App Store Connect UI itself (not a CI log risk)                 | N/A        | N/A    | Expected — reviewers and the app owner are meant to see this contact info there                                                                                                      |
 
+### Precheck vs. In-App Purchases (API Key Pitfall)
+
+`upload_to_app_store` runs `precheck` before submitting by default (`run_precheck_before_submit: true`), which scans metadata for App Review guideline violations. If the app has no in-app purchases, this still fails:
+
+```
+[!] Precheck cannot check In-app purchases with the App Store Connect API Key (yet).
+Exclude In-app purchases from precheck, disable the precheck step in your build step, or use Apple ID login
+```
+
+**Why:** `precheck`'s in-app purchase check requires an authentication method that has access to a different, older API surface than the App Store Connect API key supports — see fastlane's own message above. This repo's lanes authenticate exclusively via `app_store_connect_api_key` (see `setup_asc_api_key` in `fastlane/Fastfile`) to avoid password/2FA prompts in CI, so this check can never succeed here regardless of whether the app actually has in-app purchases.
+
+**Fix:** CountThat has no in-app purchases, so `precheck_include_in_app_purchases: false` is set on the `upload_to_app_store` call — this excludes only that one check and leaves the rest of precheck (screenshots, description, keywords, etc.) running. If a future app in this family _does_ sell in-app purchases, that check would need to run via Apple ID login instead (`run_precheck_before_submit: false` combined with a manual precheck pass, or dropping the API key for that lane) — the hard error itself is unconditional in this fastlane version, thrown from `precheck/lib/precheck/runner.rb:37` (and mirrored in `deliver/lib/deliver/runner.rb:96`) whenever API-key auth is used and the check isn't excluded.
+
 ### Running Match Locally
 
 When running `match appstore` for the first time, Fastlane may prompt for your Apple developer account password.

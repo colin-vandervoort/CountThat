@@ -128,6 +128,7 @@ platform :ios do
       automatic_release: false,
       force: true,
       overwrite_screenshots: true,
+      precheck_include_in_app_purchases: false,
       app_review_information: {
         first_name: ENV["APP_REVIEW_FIRST_NAME"],
         last_name: ENV["APP_REVIEW_LAST_NAME"],
