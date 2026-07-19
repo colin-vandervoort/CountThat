@@ -5,8 +5,16 @@ default_platform :ios
 platform :ios do
   desc "Run SwiftLint"
   lane :lint do
+    repo_root = File.dirname(File.expand_path(File.dirname(__FILE__)))
+
+    sh("swift", "package", "--package-path", repo_root, "resolve")
+
     swiftlint(
       mode: :lint,
+      executable: File.join(
+        repo_root,
+        ".build/artifacts/swiftlintplugins/SwiftLintBinary/SwiftLintBinary.artifactbundle/macos/swiftlint"
+      ),
       strict: true,
       raise_if_swiftlint_error: true
     )

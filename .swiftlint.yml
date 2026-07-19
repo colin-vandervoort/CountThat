@@ -1,5 +1,8 @@
 # cSpell: ignore xctest, iboutlet
 
+excluded:
+  - .build
+
 disabled_rules:
   - closure_parameter_position
   - comment_spacing

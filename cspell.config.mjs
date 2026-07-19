@@ -92,6 +92,8 @@ export default {
     "**/project.pbxproj",
     "cspell.config.js",
     "cspell.config.mjs",
+    "Gemfile.lock",
+    "Package.resolved"
   ],
   languageSettings: [
     {
