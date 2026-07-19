@@ -53,9 +53,13 @@ struct CounterFormView: View {
                 if selectedTagIDs.contains(tag.persistentModelID) {
                   Image(systemName: "checkmark")
                     .foregroundStyle(.tint)
+                    .accessibilityHidden(true)
                 }
               }
             }
+            .accessibilityAddTraits(
+              selectedTagIDs.contains(tag.persistentModelID) ? .isSelected : []
+            )
           }
 
           HStack {

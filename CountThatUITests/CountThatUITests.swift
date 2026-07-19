@@ -2,6 +2,7 @@ import XCTest
 
 final class CountThatUITests: XCTestCase {
 
+  // swiftlint:disable:next implicitly_unwrapped_optional
   var app: XCUIApplication!
 
   override func setUpWithError() throws {

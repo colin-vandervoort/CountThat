@@ -2,6 +2,7 @@
 
 excluded:
   - .build
+  - CountThatUITests/SnapshotHelper.swift
 
 disabled_rules:
   - closure_parameter_position

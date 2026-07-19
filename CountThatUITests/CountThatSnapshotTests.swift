@@ -2,6 +2,7 @@ import XCTest
 
 final class CountThatSnapshotTests: XCTestCase {
 
+  // swiftlint:disable:next implicitly_unwrapped_optional
   var app: XCUIApplication!
 
   @MainActor

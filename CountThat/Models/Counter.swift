@@ -10,6 +10,7 @@ final class Counter {
 
   @Relationship(deleteRule: .nullify, inverse: \Tag.counters)
   // CloudKit integration requires that all relationships be optional
+  // swiftlint:disable:next discouraged_optional_collection
   var tags: [Tag]? = []
 
   init(name: String, desc: String = "", count: Int = 0, tags: [Tag] = []) {
