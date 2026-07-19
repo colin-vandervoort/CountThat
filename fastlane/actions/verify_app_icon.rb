@@ -24,6 +24,15 @@ module Fastlane
             next
           end
 
+          header = File.open(icon_path, "rb") { |f| f.read(40) }
+          UI.message("#{icon_path} header: #{header.inspect}")
+
+          if header&.start_with?("version https://git-lfs")
+            errors << "#{icon_path} is a Git LFS pointer, not image data — run `git lfs pull` " \
+                       "(or add `lfs: true` to the actions/checkout step) before verifying icons"
+            next
+          end
+
           properties = sips_properties(icon_path)
 
           if properties["hasAlpha"] == "yes"

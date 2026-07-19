@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          lfs: true
 
       - name: Load SSH deploy key
         env:
@@ -53,6 +54,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          lfs: true
 
       - name: Load SSH deploy key
         env:
