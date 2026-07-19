@@ -84,6 +84,8 @@ platform :ios do
   lane :release do
     verify_app_icon
     verify_info_plist
+    verify_screenshots
+    verify_release_notes
 
     version = ENV["GITHUB_REF_NAME"]&.delete_prefix("v")
     increment_version_number(version_number: version) if version
