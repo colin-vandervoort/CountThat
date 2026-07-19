@@ -193,6 +193,39 @@ Generate the key at App Store Connect → Users & Access → Integrations → Ke
 
 Use the **App Manager** role — sufficient for uploading builds and submitting for review without granting unnecessary Admin access.
 
+### App Review Information (First Submission Pitfall)
+
+The **very first** version of a new app submitted via `upload_to_app_store` will fail with a cryptic `[!] No data (RuntimeError)` deep in spaceship's `fetch_app_store_review_detail`, even though the build, signing, and metadata upload all succeeded.
+
+**Why:** `deliver` tries to fetch the app's existing App Review Information from App Store Connect to attach it to the submission. For a brand-new app, no App Review Information has ever been submitted, so the API returns nothing — and `deliver` doesn't handle that null response gracefully. See [fastlane/fastlane#20538](https://github.com/fastlane/fastlane/issues/20538).
+
+**Fix:** supply `app_review_information` explicitly in the `upload_to_app_store` call (see `fastlane/Fastfile`) rather than relying on it already existing in App Store Connect. This repo pulls it from the `APP_REVIEW_FIRST_NAME`, `APP_REVIEW_LAST_NAME`, `APP_REVIEW_PHONE`, and `APP_REVIEW_EMAIL` repo secrets. Once a first version has been submitted successfully, App Store Connect retains this info and the crash won't recur even without these fields — but passing them explicitly keeps every submission reproducible from a clean slate (e.g. after deleting and recreating the app).
+
+#### Log exposure threat model
+
+`APP_REVIEW_FIRST_NAME`/`APP_REVIEW_LAST_NAME`/`APP_REVIEW_PHONE`/`APP_REVIEW_EMAIL` are personal contact info, not secrets in the "compromises the app" sense — but they shouldn't sit in plaintext in CI logs either. Verified against the installed `fastlane-2.237.0` gem source (`deliver/lib/deliver/runner.rb:29`):
+
+```ruby
+FastlaneCore::PrintTable.print_values(config: options, hide_keys: [:app], mask_keys: ['app_review_information.demo_password'], title: "deliver #{Fastlane::VERSION} Summary")
+```
+
+`deliver`'s own summary table only masks `demo_password`. `first_name`, `last_name`, `phone_number`, `email_address` are nested inside the `app_review_information` hash passed to `upload_to_app_store`, and `PrintTable.collect_rows` (`fastlane_core/lib/fastlane_core/print_table.rb`) recurses into any value that responds to `:key` — which a `Hash` does — printing each nested field as its own row, unmasked, into the job log. fastlane provides zero protection here on its own.
+
+**Why it's still safe:** GitHub Actions masks every exact-match occurrence of a value registered as a secret, anywhere in the job log — not just at the point it's assigned to `env:`. This is the same mechanism already visible in this repo's logs today: `APPLE_ID`/`TEAM_ID`/`MATCH_GIT_URL` get redacted to `***` in both the `match` and `deliver` summary tables, i.e. redacted at _every_ print site, not just the first. `fastlane/Fastfile` passes the four review-info values via `ENV["APP_REVIEW_*"]`, and `.github/workflows/cd.yml` sets those from `${{ secrets.APP_REVIEW_* }}` — same pattern as the values already proven to redact correctly.
+
+Two conditions have to hold for that blanket redaction to actually apply, both true here:
+
+1. **Must be registered as a repo Secret, not a Variable.** GitHub Variables (`vars` context) are never masked — only `secrets` context values are. If these were ever added under Settings → Secrets and variables → Actions → _Variables_ instead of _Secrets_, they'd print in plaintext with no protection at all.
+2. **Value must survive to the log unmodified.** GitHub's masking is an exact-substring match. `PrintTable`'s table renderer normally wordwraps long values, which could split a secret across lines and defeat the match — but `should_transform?` in `print_table.rb` disables that wordwrap whenever `FastlaneCore::Helper.ci?` is true, which it is on GitHub Actions (`CI=true` is set by the runner). So under the lanes as currently written, values print as a single unbroken line.
+
+**Remaining risks (accepted):**
+
+| Risk                                                                               | Likelihood | Impact | Mitigation                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Secrets added as repo Variables instead of Secrets                                 | Low        | Medium | Documented here; double-check the Secrets tab was used when setting these up                                                                                                         |
+| A future lane adds `--verbose` or another flag that reformats/encodes these values | Low        | Medium | Masking relies on an exact-string match; any transform (base64, case change, JSON-escaping) before printing would defeat it — avoid adding debug/verbose flags to the `release` lane |
+| Values exposed via App Store Connect UI itself (not a CI log risk)                 | N/A        | N/A    | Expected — reviewers and the app owner are meant to see this contact info there                                                                                                      |
+
 ### Running Match Locally
 
 When running `match appstore` for the first time, Fastlane may prompt for your Apple developer account password.

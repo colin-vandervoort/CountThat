@@ -93,7 +93,7 @@ export default {
     "cspell.config.js",
     "cspell.config.mjs",
     "Gemfile.lock",
-    "Package.resolved"
+    "Package.resolved",
   ],
   languageSettings: [
     {
